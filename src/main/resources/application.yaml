@@ -1,0 +1,137 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: auth-service
+  main:
+    banner-mode: off
+
+#  datasource:
+#    url: ${MS_AUTH_DATASOURCE_URL:jdbc:postgresql://postgres:5432/authdb}
+#    username: ${MS_AUTH_USER:postgres}
+#    password: ${DB_PASSWORD:postgres}
+#    driver-class-name: org.postgresql.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: false
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.PostgreSQLDialect
+#        format_sql: true
+
+
+# ================================================
+#  KEYCLOAK CONFIGURATIO
+# ================================================
+keycloak:
+  auth-server-url: ${KEYCLOACK_SERVER_URL:http://localhost:8080}
+  realm: ${KEYCLOACK_REALM:myrealm}
+  resource: ${KEYCLOACK_RESOURCE:auth_resource}
+  credentials:
+    secret: ${KEYCLOAK_CLIENT_SECRET:my_secret}
+  admin:
+    realm: ${KEYCLOACK_REALM_ADMIN:master}
+    client-id: ${KEYCLOACK_ADMIN_CLI:admin-service-account}  # Your new service account client
+    client-secret: ${KEYCLOAK_ADMIN_SECRET:8f9d2a1c-4b5e-4d3a-9f1e-7d8c6b5a4e3f}
+
+# ================================================
+#  ADMIN IP WHITELIST ? ONLY BAKU TRUSTED NETWORKS
+# ================================================
+#security:
+#  admin:
+#    allowed-ips:
+#      - 127.0.0.1
+#      - ::1
+#      - 185.43.220.0/22           # Azercell DC
+#      - 217.25.16.0/20            # Your company HQ
+#      - 94.20.140.0/24            # Backup office
+#      - 217.25.17.42              # Your personal static IP (home)
+#      - 10.0.0.0/8                # Internal VPC (if using Kubernetes)
+
+# ================================================
+#  LOGGING ? Azerbaijan Standard (JSON + Console)
+# ================================================
+logging:
+  level:
+    root: INFO
+    com.example: DEBUG
+    org.keycloak: WARN
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+#  file:
+#    name: /var/log/auth-service/auth-service.log
+
+# ================================================
+#  ACTUATOR & MANAGEMENT (for monitoring)
+# ================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+info:
+  app:
+    name: Auth Service
+    country: Azerbaijan
+    timezone: Asia/Baku
+    version: 1.0.0
+    build-time: 2025-11-15T11:22:00+04:00
+
+# ================================================
+#  SPRING SECURITY (Resource Server)
+# ================================================
+#spring:
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          issuer-uri: ${keycloak.auth-server-url}/realms/${keycloak.realm}
+
+# ================================================
+#  CORS (if you have frontend)
+# ================================================
+#cors:
+#  allowed-origins:
+#    - https://app.yourcompany.az
+#    - https://admin.yourcompany.az
+#    - http://localhost:3000
+#  allowed-methods: "*"
+#  allowed-headers: "*"
+#  allow-credentials: true
+#
+#
+#app:
+#  jwt:
+#    access-token-validity-seconds: 3600   # 1 hour
+#    refresh-token-validity-seconds: 86400 # 24 hours
+#  admin:
+#    audit-log-enabled: true
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: full

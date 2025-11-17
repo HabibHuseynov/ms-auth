@@ -1,0 +1,81 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.7'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'ms-auth'
+
+java {
+    toolchain {
+        // Spring Boot 3.5.x officially supports Java 17–24, Java 25 is experimental
+        // Use Java 21 (LTS) or 17 unless you really need 25 preview features
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+    // Spring Cloud 2025.0.x releases are in Maven Central, snapshots are not needed
+    // maven { url 'https://repo.spring.io/snapshot' }  // ← remove
+}
+
+dependencyManagement {
+    imports {
+        // 2025.0.0 is the correct bom for Spring Boot 3.5.x (cloud edition 2025 = "Kilburn")
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.0.0"
+    }
+}
+
+dependencies {
+    // Core
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+//    // If you want classic MVC (not WebFlux)
+//    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+    // Security + OAuth2 Resource Server (highly recommended for Keycloak)
+//    implementation 'org.springframework.boot:spring-boot-starter-security'
+//    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+    // OpenFeign (client for calling other microservices)
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'io.github.openfeign.form:feign-form:3.8.0'
+    implementation 'io.github.openfeign.form:feign-form-spring:3.8.0'
+
+    // Keycloak
+    implementation 'org.keycloak:keycloak-admin-client:26.0.7'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'// same version everywhere
+    // Policy enforcer is only needed if you use the old adapter way (not recommended with Boot 3)
+    // implementation 'org.keycloak:keycloak-policy-enforcer:26.0.7'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Optional: make bootJar the default jar
+tasks.named('bootJar') {
+    enabled = true
+}
+tasks.named('jar') {
+    enabled = false
+}

@@ -1,0 +1,335 @@
+{
+  "info": {
+    "name": "ms-auth API",
+    "_postman_id": "f29e0d2e-6f4a-47c1-9a97-9a3d2bfb0b1b",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection generated from project controllers (AuthController, KeycloakAdminController, AccessController)."
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "userId", "value": "<USER_ID>" },
+    { "key": "roleName", "value": "<ROLE_NAME>" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"john.doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"P@ssw0rd!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"john.doe\",\n  \"password\": \"P@ssw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<REFRESH_TOKEN>\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Me (User Info)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Check Permission (AuthController)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/check",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "check"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resource\": \"<RESOURCE_ID_OR_NAME>\",\n  \"scope\": \"<SCOPE_NAME>\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Access",
+      "item": [
+        {
+          "name": "Check Access (AccessController)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/check-access",
+              "host": ["{{base_url}}"],
+              "path": ["check-access"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resource\": \"<RESOURCE_ID_OR_NAME>\",\n  \"scope\": \"<SCOPE_NAME>\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin (Keycloak)",
+      "item": [
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"manager\",\n  \"description\": \"Manager role\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Get Role By Name",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/roles/{{roleName}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "roles", "{{roleName}}"]
+            }
+          }
+        },
+        {
+          "name": "Assign Role To User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/users/{{userId}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "users", "{{userId}}", "roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"manager\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Remove Role From User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/users/{{userId}}/roles/{{roleName}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "users", "{{userId}}", "roles", "{{roleName}}"]
+            }
+          }
+        },
+        {
+          "name": "Get User Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/users/{{userId}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "users", "{{userId}}", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/users?q=john",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "users"],
+              "query": [
+                { "key": "q", "value": "john" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Resource",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/authorization/resources",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "authorization", "resources"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceName\": \"Orders API\",\n  \"uriPattern\": \"/api/orders/**\",\n  \"policyName\": \"Only Admin Can Write Orders\",\n  \"allowedMethods\": [\n    \"GET\", \"POST\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Create Scope",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/authorization/scopes",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "authorization", "scopes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scopeName\": \"order:read\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Create Role Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/authorization/policies/role",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "authorization", "policies", "role"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policyName\": \"Only Admins\",\n  \"description\": \"Access restricted to admins\",\n  \"roles\": [\n    \"<ROLE_ID_1>\",\n    \"<ROLE_ID_2>\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/authorization/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "authorization", "permissions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Orders Read Permission\",\n  \"resourceId\": \"<RESOURCE_ID>\",\n  \"scopes\": [\n    \"GET\"\n  ],\n  \"policyIds\": [\n    \"<POLICY_ID_1>\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

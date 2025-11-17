@@ -1,0 +1,567 @@
+{
+  "info": {
+    "name": "Keycloak Service Account Setup",
+    "description": "Complete setup for Keycloak admin service account",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "keycloak_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "admin_username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "SuperSecret2025!",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "service_account_client_id",
+      "value": "admin-service-account",
+      "type": "string"
+    },
+    {
+      "key": "service_account_secret",
+      "value": "8f9d2a1c-4b5e-4d3a-9f1e-7d8c6b5a4e3f",
+      "type": "string"
+    },
+    {
+      "key": "client_uuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "service_account_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "realm_mgmt_client_uuid",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Get Admin Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"admin_token\", jsonData.access_token);",
+              "console.log(\"Admin Token:\", jsonData.access_token);",
+              "",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Access token received\", function () {",
+              "    pm.expect(jsonData.access_token).to.not.be.undefined;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "{{admin_username}}",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "{{admin_password}}",
+              "type": "text"
+            },
+            {
+              "key": "grant_type",
+              "value": "password",
+              "type": "text"
+            },
+            {
+              "key": "client_id",
+              "value": "admin-cli",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{keycloak_url}}/realms/master/protocol/openid-connect/token",
+          "host": ["{{keycloak_url}}"],
+          "path": ["realms", "master", "protocol", "openid-connect", "token"]
+        },
+        "description": "Get admin access token for Keycloak master realm"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Create Service Account Client",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "console.log(\"Service account client created successfully\");"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clientId\": \"{{service_account_client_id}}\",\n  \"enabled\": true,\n  \"clientAuthenticatorType\": \"client-secret\",\n  \"secret\": \"{{service_account_secret}}\",\n  \"publicClient\": false,\n  \"bearerOnly\": false,\n  \"standardFlowEnabled\": false,\n  \"implicitFlowEnabled\": false,\n  \"directAccessGrantsEnabled\": false,\n  \"serviceAccountsEnabled\": true,\n  \"authorizationServicesEnabled\": false,\n  \"protocol\": \"openid-connect\"\n}"
+        },
+        "url": {
+          "raw": "{{keycloak_url}}/admin/realms/master/clients",
+          "host": ["{{keycloak_url}}"],
+          "path": ["admin", "realms", "master", "clients"]
+        },
+        "description": "Create service account client in master realm"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Client UUID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"client_uuid\", jsonData[0].id);",
+              "console.log(\"Client UUID:\", jsonData[0].id);",
+              "",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Client found\", function () {",
+              "    pm.expect(jsonData.length).to.be.above(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{keycloak_url}}/admin/realms/master/clients?clientId={{service_account_client_id}}",
+          "host": ["{{keycloak_url}}"],
+          "path": ["admin", "realms", "master", "clients"],
+          "query": [
+            {
+              "key": "clientId",
+              "value": "{{service_account_client_id}}"
+            }
+          ]
+        },
+        "description": "Get the UUID of the service account client"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Get Service Account User ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"service_account_user_id\", jsonData.id);",
+              "console.log(\"Service Account User ID:\", jsonData.id);",
+              "",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Service account user found\", function () {",
+              "    pm.expect(jsonData.id).to.not.be.undefined;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{keycloak_url}}/admin/realms/master/clients/{{client_uuid}}/service-account-user",
+          "host": ["{{keycloak_url}}"],
+          "path": [
+            "admin",
+            "realms",
+            "master",
+            "clients",
+            "{{client_uuid}}",
+            "service-account-user"
+          ]
+        },
+        "description": "Get the user ID of the service account"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Get Realm Management Client UUID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"realm_mgmt_client_uuid\", jsonData[0].id);",
+              "console.log(\"Realm Management Client UUID:\", jsonData[0].id);",
+              "",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Realm management client found\", function () {",
+              "    pm.expect(jsonData.length).to.be.above(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{keycloak_url}}/admin/realms/master/clients?clientId=realm-management",
+          "host": ["{{keycloak_url}}"],
+          "path": ["admin", "realms", "master", "clients"],
+          "query": [
+            {
+              "key": "clientId",
+              "value": "realm-management"
+            }
+          ]
+        },
+        "description": "Get the UUID of realm-management client"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Get Manage Users Role",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set(\"manage_users_role\", pm.response.text());",
+              "console.log(\"Manage Users Role saved\");",
+              "",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{keycloak_url}}/admin/realms/master/clients/{{realm_mgmt_client_uuid}}/roles/manage-users",
+          "host": ["{{keycloak_url}}"],
+          "path": [
+            "admin",
+            "realms",
+            "master",
+            "clients",
+            "{{realm_mgmt_client_uuid}}",
+            "roles",
+            "manage-users"
+          ]
+        },
+        "description": "Get manage-users role from realm-management client"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Assign Manage Users Role",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 204\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});",
+              "",
+              "console.log(\"Manage users role assigned successfully\");"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Get the manage_users_role and wrap it in array",
+              "var roleJson = pm.collectionVariables.get(\"manage_users_role\");",
+              "pm.collectionVariables.set(\"role_array\", \"[\" + roleJson + \"]\");"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{role_array}}"
+        },
+        "url": {
+          "raw": "{{keycloak_url}}/admin/realms/master/users/{{service_account_user_id}}/role-mappings/clients/{{realm_mgmt_client_uuid}}",
+          "host": ["{{keycloak_url}}"],
+          "path": [
+            "admin",
+            "realms",
+            "master",
+            "users",
+            "{{service_account_user_id}}",
+            "role-mappings",
+            "clients",
+            "{{realm_mgmt_client_uuid}}"
+          ]
+        },
+        "description": "Assign manage-users role to service account"
+      },
+      "response": []
+    },
+    {
+      "name": "8. Assign All Admin Roles",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 204\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});",
+              "",
+              "console.log(\"All admin roles assigned successfully\");"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\"id\": \"manage-users\", \"name\": \"manage-users\"},\n  {\"id\": \"manage-clients\", \"name\": \"manage-clients\"},\n  {\"id\": \"manage-realm\", \"name\": \"manage-realm\"},\n  {\"id\": \"view-users\", \"name\": \"view-users\"},\n  {\"id\": \"view-clients\", \"name\": \"view-clients\"},\n  {\"id\": \"view-realm\", \"name\": \"view-realm\"},\n  {\"id\": \"query-users\", \"name\": \"query-users\"},\n  {\"id\": \"query-clients\", \"name\": \"query-clients\"}\n]"
+        },
+        "url": {
+          "raw": "{{keycloak_url}}/admin/realms/master/users/{{service_account_user_id}}/role-mappings/clients/{{realm_mgmt_client_uuid}}",
+          "host": ["{{keycloak_url}}"],
+          "path": [
+            "admin",
+            "realms",
+            "master",
+            "users",
+            "{{service_account_user_id}}",
+            "role-mappings",
+            "clients",
+            "{{realm_mgmt_client_uuid}}"
+          ]
+        },
+        "description": "Assign all required admin roles to service account"
+      },
+      "response": []
+    },
+    {
+      "name": "9. Test Service Account Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"service_account_token\", jsonData.access_token);",
+              "console.log(\"Service Account Token:\", jsonData.access_token);",
+              "",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Access token received\", function () {",
+              "    pm.expect(jsonData.access_token).to.not.be.undefined;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "client_id",
+              "value": "{{service_account_client_id}}",
+              "type": "text"
+            },
+            {
+              "key": "client_secret",
+              "value": "{{service_account_secret}}",
+              "type": "text"
+            },
+            {
+              "key": "grant_type",
+              "value": "client_credentials",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{keycloak_url}}/realms/master/protocol/openid-connect/token",
+          "host": ["{{keycloak_url}}"],
+          "path": ["realms", "master", "protocol", "openid-connect", "token"]
+        },
+        "description": "Test service account authentication with client_credentials grant"
+      },
+      "response": []
+    },
+    {
+      "name": "10. Verify - List Realms",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Can list realms\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.length).to.be.above(0);",
+              "    console.log(\"Found\", jsonData.length, \"realms\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{service_account_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{keycloak_url}}/admin/realms",
+          "host": ["{{keycloak_url}}"],
+          "path": ["admin", "realms"]
+        },
+        "description": "Verify service account can list realms"
+      },
+      "response": []
+    }
+  ]
+}

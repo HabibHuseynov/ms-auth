@@ -1,0 +1,630 @@
+{
+  "info": {
+    "name": "ms-auth API (Auto Token)",
+    "_postman_id": "f29e0d2e-6f4a-47c1-9a97-9a3d2bfb0b1b",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection with automatic token management. Tokens are automatically extracted and set after login/refresh."
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "roleName", "value": "manager" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"john.doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"P@ssw0rd!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Check if registration was successful",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    console.log('✅ User registered successfully');",
+                  "    ",
+                  "    // Parse response",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        ",
+                  "        // Save token if returned",
+                  "        if (response.token || response.access_token || response.accessToken) {",
+                  "            const token = response.token || response.access_token || response.accessToken;",
+                  "            pm.collectionVariables.set('token', token);",
+                  "            console.log('✅ Access token saved automatically');",
+                  "        }",
+                  "        ",
+                  "        // Save refresh token if returned",
+                  "        if (response.refreshToken || response.refresh_token) {",
+                  "            const refreshToken = response.refreshToken || response.refresh_token;",
+                  "            pm.collectionVariables.set('refresh_token', refreshToken);",
+                  "            console.log('✅ Refresh token saved automatically');",
+                  "        }",
+                  "        ",
+                  "        // Save user ID if returned",
+                  "        if (response.userId || response.id) {",
+                  "            const userId = response.userId || response.id;",
+                  "            pm.collectionVariables.set('userId', userId);",
+                  "            console.log('✅ User ID saved: ' + userId);",
+                  "        }",
+                  "    } catch (error) {",
+                  "        console.log('ℹ️  No JSON response to parse');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"john.doe\",\n  \"password\": \"P@ssw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Automatically save tokens after successful login",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    // Save access token (try different possible field names)",
+                  "    const token = response.token || response.access_token || response.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('token', token);",
+                  "        console.log('✅ Access token saved automatically');",
+                  "    }",
+                  "    ",
+                  "    // Save refresh token",
+                  "    const refreshToken = response.refreshToken || response.refresh_token;",
+                  "    if (refreshToken) {",
+                  "        pm.collectionVariables.set('refresh_token', refreshToken);",
+                  "        console.log('✅ Refresh token saved automatically');",
+                  "    }",
+                  "    ",
+                  "    // Save user ID if present",
+                  "    if (response.userId || response.id) {",
+                  "        pm.collectionVariables.set('userId', response.userId || response.id);",
+                  "        console.log('✅ User ID saved');",
+                  "    }",
+                  "    ",
+                  "    console.log('✅ Login successful - tokens ready to use!');",
+                  "} else {",
+                  "    console.log('❌ Login failed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Automatically save new tokens after refresh",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    // Save new access token",
+                  "    const token = response.token || response.access_token || response.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('token', token);",
+                  "        console.log('✅ New access token saved');",
+                  "    }",
+                  "    ",
+                  "    // Save new refresh token if provided",
+                  "    const refreshToken = response.refreshToken || response.refresh_token;",
+                  "    if (refreshToken) {",
+                  "        pm.collectionVariables.set('refresh_token', refreshToken);",
+                  "        console.log('✅ New refresh token saved');",
+                  "    }",
+                  "    ",
+                  "    console.log('✅ Token refreshed successfully!');",
+                  "} else {",
+                  "    console.log('❌ Token refresh failed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me (User Info)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Automatically extract and save user ID",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    // Save user ID",
+                  "    if (response.userId || response.id || response.sub) {",
+                  "        const userId = response.userId || response.id || response.sub;",
+                  "        pm.collectionVariables.set('userId', userId);",
+                  "        console.log('✅ User ID saved: ' + userId);",
+                  "    }",
+                  "    ",
+                  "    // Display user info",
+                  "    console.log('User Info:', response);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Check Permission (AuthController)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/check",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "check"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resource\": \"Orders API\",\n  \"scope\": \"GET\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('Permission Check Result:', response);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Access",
+      "item": [
+        {
+          "name": "Check Access (AccessController)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/check-access",
+              "host": ["{{base_url}}"],
+              "path": ["check-access"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resource\": \"Orders API\",\n  \"scope\": \"GET\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('Access Check Result:', response);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin (Keycloak)",
+      "item": [
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"manager\",\n  \"description\": \"Manager role\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    console.log('✅ Role created successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Get Role By Name",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/roles/{{roleName}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "roles", "{{roleName}}"]
+            }
+          }
+        },
+        {
+          "name": "Assign Role To User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/users/{{userId}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "users", "{{userId}}", "roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleName\": \"{{roleName}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 204) {",
+                  "    console.log('✅ Role assigned to user successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Role From User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/users/{{userId}}/roles/{{roleName}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "users", "{{userId}}", "roles", "{{roleName}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 204) {",
+                  "    console.log('✅ Role removed from user successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/users/{{userId}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "users", "{{userId}}", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/users?q=john",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "users"],
+              "query": [
+                { "key": "q", "value": "john" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Optionally save first user ID from search results",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (Array.isArray(response) && response.length > 0) {",
+                  "        const firstUserId = response[0].id || response[0].userId;",
+                  "        if (firstUserId) {",
+                  "            console.log('ℹ️  First user ID found: ' + firstUserId);",
+                  "            console.log('💡 Tip: You can manually set this as userId variable if needed');",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Resource",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/authorization/resources",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "authorization", "resources"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceName\": \"Orders API\",\n  \"uriPattern\": \"/api/orders/**\",\n  \"policyName\": \"Only Admin Can Write Orders\",\n  \"allowedMethods\": [\n    \"GET\",\n    \"POST\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id || response.resourceId) {",
+                  "        const resourceId = response.id || response.resourceId;",
+                  "        console.log('✅ Resource created with ID: ' + resourceId);",
+                  "        console.log('💡 Save this ID for creating permissions');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Scope",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/authorization/scopes",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "authorization", "scopes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scopeName\": \"order:read\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id || response.scopeId) {",
+                  "        const scopeId = response.id || response.scopeId;",
+                  "        console.log('✅ Scope created with ID: ' + scopeId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Role Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/authorization/policies/role",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "authorization", "policies", "role"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policyName\": \"Only Admins\",\n  \"description\": \"Access restricted to admins\",\n  \"roles\": [\n    \"admin\",\n    \"manager\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id || response.policyId) {",
+                  "        const policyId = response.id || response.policyId;",
+                  "        console.log('✅ Policy created with ID: ' + policyId);",
+                  "        console.log('💡 Save this ID for creating permissions');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/keycloak/authorization/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "keycloak", "authorization", "permissions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Orders Read Permission\",\n  \"resourceId\": \"<RESOURCE_ID>\",\n  \"scopes\": [\n    \"GET\"\n  ],\n  \"policyIds\": [\n    \"<POLICY_ID>\"\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id || response.permissionId) {",
+                  "        const permissionId = response.id || response.permissionId;",
+                  "        console.log('✅ Permission created with ID: ' + permissionId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
